@@ -1,4 +1,4 @@
-"""Local manga translation workspace backend."""
+"""ComicTrans backend."""
 
 __all__ = [
     "detection",

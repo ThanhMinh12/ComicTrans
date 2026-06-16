@@ -12,4 +12,3 @@ desktop/node_modules/
 *.egg-info/
 .agents/
 .codex/
-desktop

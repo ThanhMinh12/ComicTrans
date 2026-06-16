@@ -1,6 +1,6 @@
-# Manga Workspace
+# ComicTrans
 
-A local-first manga translation workspace scaffold with:
+A local-first comic translation workspace scaffold with:
 
 - Python/FastAPI backend for page analysis, OCR hooks, inpainting, and rendering.
 - A tested Pillow-style oval text layout engine with binary-search font sizing.
@@ -159,7 +159,7 @@ Then open:
 http://127.0.0.1:5173
 ```
 
-Electron is optional during early testing. Install and launch it from WSL2/Linux Node, or from a normal Windows path such as `C:\Users\buimi\dev\manga`, not from a `\\wsl.localhost\...` UNC path:
+Electron is optional during early testing. Install and launch it from WSL2/Linux Node, or from a normal Windows path such as `C:\Users\buimi\dev\ComicTrans`, not from a `\\wsl.localhost\...` UNC path:
 
 ```bash
 cd desktop

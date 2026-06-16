@@ -3,9 +3,9 @@ requires = ["setuptools>=70", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "manga-workspace-backend"
+name = "comictrans-backend"
 version = "0.1.0"
-description = "Local manga translation workspace backend: detection, OCR hooks, inpainting, and text layout."
+description = "Local comic translation workspace backend: detection, OCR hooks, inpainting, and text layout."
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.111",
