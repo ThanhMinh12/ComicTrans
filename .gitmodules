@@ -1,0 +1,3 @@
+[submodule "backend/vendor/comic-text-detector"]
+	path = backend/vendor/comic-text-detector
+	url = https://github.com/dmMaze/comic-text-detector.git

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "manga-workspace-backend"
+version = "0.1.0"
+description = "Local manga translation workspace backend: detection, OCR hooks, inpainting, and text layout."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.111",
+  "numpy>=1.26",
+  "opencv-python>=4.10",
+  "pillow>=10.3",
+  "python-multipart>=0.0.9",
+  "uvicorn[standard]>=0.30",
+]
+
+[project.optional-dependencies]
+ocr = ["manga-ocr>=0.1.14"]
+dev = ["pytest>=8.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

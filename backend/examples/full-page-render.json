@@ -1,0 +1,63 @@
+{
+  "pageId": "ea07496272354301a2faa41895ac25d0",
+  "baseImage": "original",
+  "replaceBackground": true,
+  "bubbles": [
+    {
+      "id": "manual-001",
+      "bbox": { "x": 56, "y": 120, "width": 91, "height": 72 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "CHILDREN",
+      "tone": "neutral"
+    },
+    {
+      "id": "manual-002",
+      "bbox": { "x": 214, "y": 119, "width": 104, "height": 72 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "The village once used children as offerings.",
+      "tone": "neutral"
+    },
+    {
+      "id": "manual-003",
+      "bbox": { "x": 96, "y": 205, "width": 201, "height": 20 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "CURSED VILLAGE LEGEND",
+      "tone": "neutral"
+    },
+    {
+      "id": "manual-004",
+      "bbox": { "x": 48, "y": 229, "width": 91, "height": 87 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "This is probably the key point behind the case.",
+      "tone": "casual"
+    },
+    {
+      "id": "manual-005",
+      "bbox": { "x": 258, "y": 254, "width": 58, "height": 64 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "The woman was found dead.",
+      "tone": "neutral"
+    },
+    {
+      "id": "manual-006",
+      "bbox": { "x": 57, "y": 424, "width": 93, "height": 86 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "This is impossible. Something is wrong here.",
+      "tone": "shouting"
+    },
+    {
+      "id": "manual-007",
+      "bbox": { "x": 249, "y": 439, "width": 64, "height": 69 },
+      "confidence": 1,
+      "sourceText": "",
+      "translation": "But police called it an accident.",
+      "tone": "neutral"
+    }
+  ]
+}

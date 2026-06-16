@@ -1,0 +1,2 @@
+-r requirements.txt
+manga-ocr>=0.1.14

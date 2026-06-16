@@ -1,0 +1,6 @@
+-r requirements.txt
+pyclipper>=1.4
+requests>=2.32
+shapely>=2.0
+torchsummary>=1.5
+torchvision>=0.27
