@@ -191,6 +191,47 @@ npm run desktop
 
 The UI expects the backend at `http://127.0.0.1:8000`; the toolbar field lets you change it.
 
+## Chrome Extension
+
+The extension lives in:
+
+```text
+extension/
+```
+
+It uses Manifest V3, a side panel for controls, and a content script that scans normal `http` and `https` pages for large manga-like images. The extension still uses the high-quality backend route:
+
+```http
+POST /pages/process?runOcr=true&translate=true&includeImages=false
+```
+
+Start the backend first:
+
+```bash
+cd backend
+.venv/bin/uvicorn manga_workspace.api:app --host 127.0.0.1 --port 8000 --app-dir src
+```
+
+Then load the extension:
+
+```text
+1. Open chrome://extensions
+2. Turn on Developer mode
+3. Click Load unpacked
+4. Select the extension/ directory
+```
+
+Use it on a raw manga page:
+
+```text
+1. Open the manga page in Chrome
+2. Click the ComicTrans extension button to open the side panel
+3. Click Refresh to scan page images
+4. Click Translate on an image, or Visible to process visible images
+```
+
+The extension fetches the selected image, sends it to the local backend, and overlays the rendered translated preview on top of the original page image. Some sites protect image URLs with anti-hotlinking rules; those may need a site-specific fetch fallback later.
+
 ## Model Upgrade Paths
 
 - Text detection: replace `OpenCVTextDetector` in `backend/src/manga_workspace/detection.py` with an adapter around `dmMaze/comic-text-detector`.
