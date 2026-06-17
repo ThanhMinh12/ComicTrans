@@ -4,7 +4,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from .detection import ComicTextDetector, OpenCVTextDetector, create_default_detector
-from .imaging import add_bright_text_on_dark_mask, clean_with_local_fill, crop_region, expand_text_mask, image_to_data_url
+from .errors import MissingDependencyError
+from .imaging import add_bright_text_on_dark_mask, clean_with_local_fill, crop_regions, expand_text_mask, image_to_data_url
 from .models import TextRegion
 from .ocr import MangaOcrReader
 from .rendering import render_regions
@@ -29,6 +30,7 @@ class MangaPipeline:
         *,
         run_ocr: bool = False,
         include_images: bool = True,
+        clean_image: bool = True,
     ) -> dict:
         page_id = uuid4().hex
         page_dir = self._page_dir(page_id)
@@ -41,9 +43,10 @@ class MangaPipeline:
         mask_path = page_dir / "text-mask.png"
         cleaned_path = page_dir / "cleaned.png"
         detection = self.detector.detect(original_path, mask_path)
-        expand_text_mask(detection.mask_path, regions=detection.regions)
-        add_bright_text_on_dark_mask(original_path, detection.mask_path)
-        clean_with_local_fill(original_path, detection.mask_path, cleaned_path)
+        if clean_image:
+            expand_text_mask(detection.mask_path, regions=detection.regions)
+            add_bright_text_on_dark_mask(original_path, detection.mask_path)
+            clean_with_local_fill(original_path, detection.mask_path, cleaned_path)
 
         regions = detection.regions
         if run_ocr:
@@ -58,15 +61,17 @@ class MangaPipeline:
                 {
                     "original": image_to_data_url(original_path),
                     "mask": image_to_data_url(mask_path),
-                    "cleaned": image_to_data_url(cleaned_path),
+                    "cleaned": image_to_data_url(cleaned_path) if cleaned_path.exists() else "",
                 }
             )
         else:
-            response["images"] = {
+            images = {
                 "original": f"/pages/{page_id}/images/original",
                 "mask": f"/pages/{page_id}/images/mask",
-                "cleaned": f"/pages/{page_id}/images/cleaned",
             }
+            if cleaned_path.exists():
+                images["cleaned"] = f"/pages/{page_id}/images/cleaned"
+            response["images"] = images
         return response
 
     def render_page(
@@ -118,9 +123,9 @@ class MangaPipeline:
     def _read_source_text(self, original_path: Path, regions: list[TextRegion]) -> list[TextRegion]:
         updated: list[TextRegion] = []
         width, height = _image_size(original_path)
-        for region in regions:
+        crops = crop_regions(original_path, [region.bbox for region in regions])
+        for region, crop in zip(regions, crops, strict=True):
             ocr_box = region.bbox
-            crop = crop_region(original_path, region.bbox)
             region.source_text = self.ocr_reader.read_image(crop)
             region.bbox = _expand_for_translation_layout(ocr_box, width, height)
             updated.append(region)

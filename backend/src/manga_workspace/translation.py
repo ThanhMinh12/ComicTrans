@@ -67,6 +67,16 @@ class RegionTranslator(Protocol):
         """Translate one OCR result."""
 
 
+class BatchRegionTranslator(RegionTranslator, Protocol):
+    def translate_many(
+        self,
+        items: list[tuple[str, Tone]],
+        *,
+        max_words: int = 14,
+    ) -> list[str]:
+        """Translate several OCR results in one model call."""
+
+
 class HuggingFaceJapaneseEnglishTranslator:
     def __init__(self, *, model_name: str = "Helsinki-NLP/opus-mt-ja-en") -> None:
         self.model_name = model_name
@@ -74,15 +84,31 @@ class HuggingFaceJapaneseEnglishTranslator:
         self._model = None
 
     def translate(self, source_text: str, tone: Tone = Tone.CASUAL, *, max_words: int = 14) -> str:
+        return self.translate_many([(source_text, tone)], max_words=max_words)[0]
+
+    def translate_many(
+        self,
+        items: list[tuple[str, Tone]],
+        *,
+        max_words: int = 14,
+    ) -> list[str]:
+        if not items:
+            return []
         tokenizer, model = self._load()
-        inputs = tokenizer([source_text], return_tensors="pt", truncation=True)
+        source_texts = [source_text for source_text, _tone in items]
+        inputs = tokenizer(source_texts, return_tensors="pt", truncation=True, padding=True)
         outputs = model.generate(**inputs, max_new_tokens=max(12, max_words * 3))
-        text = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0].strip()
-        if tone == Tone.SHOUTING:
-            return text.upper()
-        if tone == Tone.WHISPERING:
-            return text.lower()
-        return text
+        translated = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        results: list[str] = []
+        for text, (_source_text, tone) in zip(translated, items, strict=True):
+            text = text.strip()
+            if tone == Tone.SHOUTING:
+                results.append(text.upper())
+            elif tone == Tone.WHISPERING:
+                results.append(text.lower())
+            else:
+                results.append(text)
+        return results
 
     def _load(self):
         if self._tokenizer is None or self._model is None:
@@ -120,6 +146,26 @@ class AutoTranslator:
                 self._prefer_huggingface = True
         return self.huggingface.translate(source_text, tone, max_words=max_words)
 
+    def translate_many(
+        self,
+        items: list[tuple[str, Tone]],
+        *,
+        max_words: int = 14,
+    ) -> list[str]:
+        if self._prefer_huggingface:
+            return self.huggingface.translate_many(items, max_words=max_words)
+
+        results: list[str] = []
+        for index, (source_text, tone) in enumerate(items):
+            try:
+                results.append(self.ollama.translate(source_text, tone, max_words=max_words))
+            except OSError:
+                self._prefer_huggingface = True
+                remaining = items[index:]
+                results.extend(self.huggingface.translate_many(remaining, max_words=max_words))
+                break
+        return results
+
     def release(self) -> None:
         self.huggingface.release()
 
@@ -138,11 +184,25 @@ def translate_regions(
     *,
     max_words: int = 14,
 ) -> list[TextRegion]:
+    pending: list[TextRegion] = []
     for region in regions:
         if region.translation.strip():
             continue
         if not has_translatable_text(region.source_text):
             continue
+        pending.append(region)
+
+    translate_many = getattr(translator, "translate_many", None)
+    if callable(translate_many):
+        translated = translate_many(
+            [(region.source_text, region.tone) for region in pending],
+            max_words=max_words,
+        )
+        for region, text in zip(pending, translated, strict=True):
+            region.translation = text
+        return regions
+
+    for region in pending:
         region.translation = translator.translate(
             region.source_text,
             region.tone,

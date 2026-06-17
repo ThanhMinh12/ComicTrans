@@ -60,6 +60,7 @@ async def analyze_page(
     file: UploadFile = File(...),
     run_ocr: bool = Query(False, alias="runOcr"),
     include_images: bool = Query(True, alias="includeImages"),
+    clean_image: bool = Query(True, alias="cleanImage"),
 ) -> dict:
     content = await file.read()
     if not content:
@@ -71,6 +72,7 @@ async def analyze_page(
             content,
             run_ocr=run_ocr,
             include_images=include_images,
+            clean_image=clean_image,
         )
     except MissingDependencyError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -87,6 +89,7 @@ async def process_page(
     include_images: bool = Query(False, alias="includeImages"),
     base_image: str = Query("cleaned", alias="baseImage"),
     replace_background: bool = Query(False, alias="replaceBackground"),
+    clean_image: bool = Query(True, alias="cleanImage"),
 ) -> dict:
     if base_image not in {"original", "cleaned"}:
         raise HTTPException(status_code=400, detail="baseImage must be 'original' or 'cleaned'.")
@@ -101,6 +104,7 @@ async def process_page(
             content,
             run_ocr=run_ocr,
             include_images=include_images,
+            clean_image=clean_image,
         )
         regions = [TextRegion.from_mapping(item) for item in result["bubbles"]]
         if translate:
@@ -112,11 +116,12 @@ async def process_page(
             )
 
         result["bubbles"] = [region.to_dict() for region in regions]
+        render_base_image = "original" if base_image == "cleaned" and not clean_image else base_image
         render = pipeline.render_page(
             result["pageId"],
             regions,
-            base_image=base_image,
-            replace_background=replace_background,
+            base_image=render_base_image,
+            replace_background=replace_background or render_base_image == "original",
         )
         result["previewUrl"] = render["previewUrl"]
         if include_images:

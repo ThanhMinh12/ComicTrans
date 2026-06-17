@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 from .errors import MissingDependencyError
@@ -18,12 +19,12 @@ class PillowTextMeasurer(TextMeasurer):
 
     def load_font(self, font_size: int):
         try:
-            from PIL import ImageFont
+            from PIL import ImageFont  # noqa: F401
         except ModuleNotFoundError as exc:
             raise MissingDependencyError("pillow", "pip install pillow") from exc
 
         if self.font_path:
-            return ImageFont.truetype(str(self.font_path), font_size)
+            return _load_font(str(self.font_path), font_size)
 
         for candidate in (
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -32,12 +33,28 @@ class PillowTextMeasurer(TextMeasurer):
             "C:/Windows/Fonts/arialbd.ttf",
         ):
             if Path(candidate).exists():
-                return ImageFont.truetype(candidate, font_size)
+                return _load_font(candidate, font_size)
 
         try:
-            return ImageFont.load_default(size=font_size)
+            return _load_default_font(font_size)
         except TypeError:
-            return ImageFont.load_default()
+            return _load_default_font(0)
+
+
+@lru_cache(maxsize=128)
+def _load_font(font_path: str, font_size: int):
+    from PIL import ImageFont
+
+    return ImageFont.truetype(font_path, font_size)
+
+
+@lru_cache(maxsize=64)
+def _load_default_font(font_size: int):
+    from PIL import ImageFont
+
+    if font_size > 0:
+        return ImageFont.load_default(size=font_size)
+    return ImageFont.load_default()
 
 
 def render_regions(

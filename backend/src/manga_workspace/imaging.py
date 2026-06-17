@@ -16,13 +16,17 @@ def image_to_data_url(path: str | Path) -> str:
 
 
 def crop_region(image_path: str | Path, bbox: BoundingBox):
+    return crop_regions(image_path, [bbox])[0]
+
+
+def crop_regions(image_path: str | Path, boxes: list[BoundingBox]):
     try:
         from PIL import Image
     except ModuleNotFoundError as exc:
         raise MissingDependencyError("pillow", "pip install pillow") from exc
 
-    image = Image.open(image_path)
-    return image.crop((bbox.x, bbox.y, bbox.right, bbox.bottom))
+    with Image.open(image_path) as image:
+        return [image.crop((box.x, box.y, box.right, box.bottom)) for box in boxes]
 
 
 def inpaint_with_opencv(

@@ -75,6 +75,22 @@ class WarmModelTests(unittest.TestCase):
             self.assertEqual(detector.release_calls, 1)
             self.assertEqual(ocr_reader.release_calls, 1)
 
+    def test_analyze_can_skip_cleaned_image_generation(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            source = Path(temp_dir) / "source.png"
+            Image.new("RGB", (64, 64), "white").save(source)
+
+            pipeline = MangaPipeline(temp_dir, detector=FakeDetector(), ocr_reader=FakeOcrReader())
+            result = pipeline.analyze_upload(
+                "page.png",
+                source.read_bytes(),
+                include_images=False,
+                clean_image=False,
+            )
+
+            self.assertNotIn("cleaned", result["images"])
+            self.assertFalse((Path(temp_dir) / result["pageId"] / "cleaned.png").exists())
+
     def test_api_reuses_translator_for_same_engine_and_model(self) -> None:
         api._translator_cache.clear()
 

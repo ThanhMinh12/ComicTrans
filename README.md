@@ -88,6 +88,22 @@ POST /pages/analyze?runOcr=false&includeImages=false
 
 That returns small image links such as `/pages/{pageId}/images/cleaned` instead of huge `data:image/png;base64,...` fields.
 
+For a browser-extension style flow on raw manga pages, keep the default high-quality processing:
+
+```http
+POST /pages/process?runOcr=true&translate=true&includeImages=false
+```
+
+That keeps detection, OCR, translation, inpainting, and rendering in the normal pipeline while avoiding huge inline base64 image payloads.
+
+Only for a quick detection/OCR preview where you intentionally do not need inpainting yet, skip cleaned image generation:
+
+```http
+POST /pages/analyze?runOcr=true&includeImages=false&cleanImage=false
+```
+
+That returns detected regions and OCR text, but avoids mask expansion, dark-text cleanup, and local-fill image writing. This is faster, but it is not the final quality path.
+
 Install OCR support when you are ready for the heavier local model:
 
 ```bash
